@@ -7,6 +7,7 @@
 pthread_t threads[20];
 pthread_mutex_t lock_prox_pid = PTHREAD_MUTEX_INITIALIZER;
 int prox_pid = 1;
+int numero_frames_utilizados= 0;
 typedef struct No
 {
     int pid;
@@ -41,8 +42,9 @@ No* achar_ultimo_no(No* inicio){
 
 void *processo(void *arg){
     int id;
+    int numero_paginas_em_memoria = 0;
     Linha_tabela tabela_paginas[50]; // tabela de páginas
-    No *lru_lista;
+    No *lru_lista, *atual, *prox;
 
     pthread_mutex_lock(&lock_prox_pid);
     id = prox_pid;
@@ -70,22 +72,43 @@ void *processo(void *arg){
         Linha_tabela pagina = tabela_paginas[prox_pagina];
         if (pagina.em_memoria)
         {
-            No *atual = lru_lista;
-            No *prox = NULL;
+            
+            atual = lru_lista;
+            
             while (1)
             {
                 prox = atual->prox;
                 if (prox->page_number != prox_pagina)
                 {
-                    atual = prox;
+                    atual = prox       
                     continue;
                 }
-
-
+                atual->prox = prox->prox;
+                break;
             }
+            atual-> lru_lista->prox;
+            free(lre_lista);
+            lru_lista =  atual;
             
         }else{
-
+            numero_paginas_em_memoria = numero_paginas_em_memoria<4?numero_paginas_em_memoria+1:4;
+            No* novo = criar_no(id,prox_pagina);//novo nó
+            //adiciona novo ao inicio
+            novo->prox = lru_lista;
+            lru_lista = novo;
+            //remove o ultimo nó 
+            atual = lru_lista;
+            prox = lru_lista->prox       
+            while(prox->prox !=NULL){
+                 atual = atual->prox;
+                 prox = atual->prox;
+            }
+            tabela_paginas[prox->page_number].em_memoria = 0;// altera o estado na tabela de páginas, retirando o ultimo nó da memória
+            int index = tabela_paginas[prox->page_number].frame;
+            tabela_paginas[prox_pagina].em_memoria = 1;
+            atual->prox = NULL;
+            free(prox);
+            
         }
         
     }
